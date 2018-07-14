@@ -1,0 +1,5 @@
+#!/bin/bash
+
+export PATH="$PATH:/mnt/c/Users/pyoon/Documents/esp/xtensa-esp32-elf/bin"
+git submodule init lib/berkeley-db-1.xx
+git submodule update
