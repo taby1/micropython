@@ -1,4 +1,4 @@
-ESPIDF = /mnt/d/Documents/esp/esp-idf
+ESPIDF = /mnt/c/Users/pyoon/Documents/esp/esp-idf
 PORT = COM3
 #FLASH_MODE = qio
 #FLASH_SIZE = 4MB

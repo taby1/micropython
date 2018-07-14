@@ -38,6 +38,7 @@ __pycache__/
 ######################
 GNUmakefile
 user.props
+makefile
 
 # Generated rst files
 ######################
