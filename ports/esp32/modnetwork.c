@@ -55,7 +55,7 @@
 
 NORETURN void _esp_exceptions(esp_err_t e) {
    switch (e) {
-      case ESP_ERR_WIFI_NOT_INIT: 
+      case ESP_ERR_WIFI_NOT_INIT:
         mp_raise_msg(&mp_type_OSError, "Wifi Not Initialized");
       case ESP_ERR_WIFI_NOT_STARTED:
         mp_raise_msg(&mp_type_OSError, "Wifi Not Started");
@@ -92,7 +92,7 @@ NORETURN void _esp_exceptions(esp_err_t e) {
       case ESP_ERR_TCPIP_ADAPTER_DHCPC_START_FAILED:
         mp_raise_msg(&mp_type_OSError, "TCP/IP DHCP Client Start Failed");
       case ESP_ERR_TCPIP_ADAPTER_NO_MEM:
-        mp_raise_OSError(MP_ENOMEM); 
+        mp_raise_OSError(MP_ENOMEM);
       default:
         nlr_raise(mp_obj_new_exception_msg_varg(
           &mp_type_RuntimeError, "Wifi Unknown Error 0x%04x", e
@@ -608,6 +608,27 @@ unknown:
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(esp_config_obj, 1, esp_config);
 
+
+STATIC mp_obj_t wifi_sendPacket(mp_obj_t self_in, const mp_obj_t payload){
+  mp_uint_t len;
+  mp_obj_t *data;
+  uint8_t transmit[200];
+  mp_obj_get_array(payload, &len, &data);
+  for(int i = 0; i < len; i++){
+    // printf("%d\n", mp_obj_get_int(data[i]));
+    transmit[i] = (uint8_t)mp_obj_get_int(data[i]);
+    // printf("%d\n", transmit[i]);
+  }
+  if (wifi_started) {
+      // return mp_obj_new_bool(wifi_sta_connected);
+      esp_wifi_80211_tx(WIFI_IF_AP, transmit, len, false);
+      printf("Sent.\n");
+  }
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(wifi_sendPacket_obj, wifi_sendPacket);
+
+
 STATIC const mp_rom_map_elem_t wlan_if_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_active), MP_ROM_PTR(&esp_active_obj) },
     { MP_ROM_QSTR(MP_QSTR_connect), MP_ROM_PTR(&esp_connect_obj) },
@@ -617,6 +638,7 @@ STATIC const mp_rom_map_elem_t wlan_if_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_isconnected), MP_ROM_PTR(&esp_isconnected_obj) },
     { MP_ROM_QSTR(MP_QSTR_config), MP_ROM_PTR(&esp_config_obj) },
     { MP_ROM_QSTR(MP_QSTR_ifconfig), MP_ROM_PTR(&esp_ifconfig_obj) },
+    { MP_ROM_QSTR(MP_QSTR_wifi_sendPacket), MP_ROM_PTR(&wifi_sendPacket_obj)},
 };
 
 STATIC MP_DEFINE_CONST_DICT(wlan_if_locals_dict, wlan_if_locals_dict_table);

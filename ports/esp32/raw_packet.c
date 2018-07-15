@@ -91,6 +91,10 @@ STATIC mp_obj_t packetTest(void){
 			seqnum[line] = 0;
 
 		esp_wifi_80211_tx(WIFI_IF_AP, beacon_rick, sizeof(beacon_raw) + strlen(rick_ssids[line]), false);
+    
+    for(int i = 0; i < sizeof(beacon_raw) + strlen(rick_ssids[line]); i++){
+      printf("%d: %d\n", i, beacon_rick[i]);
+    }
 
 		if (++line >= TOTAL_LINES)
 			line = 0;
@@ -107,6 +111,7 @@ STATIC mp_obj_t sendPacket(const mp_obj_t payload){
     // printf("%d\n", data[i]);
     printf("%d\n", mp_obj_get_int(data[i]));
   }
+  // esp_wifi_80211_tx(WIFI_IF_AP, payload, len, false);
   return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(sendPacket_obj, sendPacket);
