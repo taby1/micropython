@@ -1,0 +1,1 @@
+python D:\Documents\esp\esp-idf\components\esptool_py\esptool\esptool.py -p COM3 -c esp32 erase_flash
