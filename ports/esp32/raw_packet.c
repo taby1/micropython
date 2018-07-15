@@ -99,8 +99,14 @@ STATIC mp_obj_t packetTest(void){
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(packetTest_obj, packetTest);
 
-STATIC mp_obj_t sendPacket(mp_obj_t raw_packet){
-  printf("%d\n", (uint8_t)mp_obj_get_int(raw_packet));
+STATIC mp_obj_t sendPacket(const mp_obj_t payload){
+  mp_uint_t len;
+  mp_obj_t *data;
+  mp_obj_get_array(payload, &len, &data);
+  for(int i = 0; i < len; i++){
+    // printf("%d\n", data[i]);
+    printf("%d\n", mp_obj_get_int(data[i]));
+  }
   return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(sendPacket_obj, sendPacket);
