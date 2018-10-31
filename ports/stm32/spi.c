@@ -177,6 +177,14 @@ void spi_set_params(const spi_t *spi_obj, uint32_t prescale, int32_t baudrate,
             mp_uint_t spi_clock;
             #if defined(STM32F0)
             spi_clock = HAL_RCC_GetPCLK1Freq();
+            #elif defined(STM32H7)
+            if (spi->Instance == SPI1 || spi->Instance == SPI2 || spi->Instance == SPI3) {
+                spi_clock = HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_SPI123);
+            } else if (spi->Instance == SPI4 || spi->Instance == SPI5) {
+                spi_clock = HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_SPI45);
+            } else {
+                spi_clock = HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_SPI6);
+            }
             #else
             if (spi->Instance == SPI2 || spi->Instance == SPI3) {
                 // SPI2 and SPI3 are on APB1
@@ -406,7 +414,7 @@ void spi_transfer(const spi_t *self, size_t len, const uint8_t *src, uint8_t *de
             status = HAL_SPI_Transmit(self->spi, (uint8_t*)src, len, timeout);
         } else {
             DMA_HandleTypeDef tx_dma;
-            dma_init(&tx_dma, self->tx_dma_descr, self->spi);
+            dma_init(&tx_dma, self->tx_dma_descr, DMA_MEMORY_TO_PERIPH, self->spi);
             self->spi->hdmatx = &tx_dma;
             self->spi->hdmarx = NULL;
             MP_HAL_CLEAN_DCACHE(src, len);
@@ -434,12 +442,12 @@ void spi_transfer(const spi_t *self, size_t len, const uint8_t *src, uint8_t *de
             DMA_HandleTypeDef tx_dma, rx_dma;
             if (self->spi->Init.Mode == SPI_MODE_MASTER) {
                 // in master mode the HAL actually does a TransmitReceive call
-                dma_init(&tx_dma, self->tx_dma_descr, self->spi);
+                dma_init(&tx_dma, self->tx_dma_descr, DMA_MEMORY_TO_PERIPH, self->spi);
                 self->spi->hdmatx = &tx_dma;
             } else {
                 self->spi->hdmatx = NULL;
             }
-            dma_init(&rx_dma, self->rx_dma_descr, self->spi);
+            dma_init(&rx_dma, self->rx_dma_descr, DMA_PERIPH_TO_MEMORY, self->spi);
             self->spi->hdmarx = &rx_dma;
             MP_HAL_CLEANINVALIDATE_DCACHE(dest, len);
             uint32_t t_start = HAL_GetTick();
@@ -467,9 +475,9 @@ void spi_transfer(const spi_t *self, size_t len, const uint8_t *src, uint8_t *de
             status = HAL_SPI_TransmitReceive(self->spi, (uint8_t*)src, dest, len, timeout);
         } else {
             DMA_HandleTypeDef tx_dma, rx_dma;
-            dma_init(&tx_dma, self->tx_dma_descr, self->spi);
+            dma_init(&tx_dma, self->tx_dma_descr, DMA_MEMORY_TO_PERIPH, self->spi);
             self->spi->hdmatx = &tx_dma;
-            dma_init(&rx_dma, self->rx_dma_descr, self->spi);
+            dma_init(&rx_dma, self->rx_dma_descr, DMA_PERIPH_TO_MEMORY, self->spi);
             self->spi->hdmarx = &rx_dma;
             MP_HAL_CLEAN_DCACHE(src, len);
             MP_HAL_CLEANINVALIDATE_DCACHE(dest, len);
@@ -523,6 +531,14 @@ void spi_print(const mp_print_t *print, const spi_t *spi_obj, bool legacy) {
             uint spi_clock;
             #if defined(STM32F0)
             spi_clock = HAL_RCC_GetPCLK1Freq();
+            #elif defined(STM32H7)
+            if (spi->Instance == SPI1 || spi->Instance == SPI2 || spi->Instance == SPI3) {
+                spi_clock = HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_SPI123);
+            } else if (spi->Instance == SPI4 || spi->Instance == SPI5) {
+                spi_clock = HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_SPI45);
+            } else {
+                spi_clock = HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_SPI6);
+            }
             #else
             if (spi->Instance == SPI2 || spi->Instance == SPI3) {
                 // SPI2 and SPI3 are on APB1
@@ -572,6 +588,11 @@ STATIC int spi_proto_ioctl(void *self_in, uint32_t cmd) {
 
     switch (cmd) {
         case MP_SPI_IOCTL_INIT:
+            self->spi->spi->Init.Mode = SPI_MODE_MASTER;
+            self->spi->spi->Init.Direction = SPI_DIRECTION_2LINES;
+            self->spi->spi->Init.NSS = SPI_NSS_SOFT;
+            self->spi->spi->Init.TIMode = SPI_TIMODE_DISABLE;
+            self->spi->spi->Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
             spi_set_params(self->spi, 0xffffffff, self->baudrate,
                 self->polarity, self->phase, self->bits, self->firstbit);
             spi_init(self->spi, false);
