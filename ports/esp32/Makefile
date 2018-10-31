@@ -175,6 +175,7 @@ SRC_C = \
 	mpthreadport.c \
 	machine_rtc.c \
 	raw_packet.c \
+	promiscuous.c \
 	$(SRC_MOD)
 
 EXTMOD_SRC_C = $(addprefix extmod/,\
