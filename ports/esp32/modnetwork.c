@@ -646,6 +646,86 @@ unknown:
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(esp_config_obj, 1, esp_config);
 
+/*
+enable to turn on or off
+type is type of frame to associate with
+idx is index of elements of ID type
+data is vendor specific element data in tuple as (element_id, length, vendor_oui, vendor_oui_type, payload)
+*/
+// STATIC mp_obj_t set_vendor_ie(mp_obj_t self_in, mp_obj_t enable, mp_obj_t type, mp_obj_t idx, mp_obj_t data){
+STATIC mp_obj_t set_vendor_ie(size_t n_args, const mp_obj_t *args){
+  wlan_if_obj_t *self = MP_OBJ_TO_PTR(args[0]);
+  const char* testing = mp_obj_str_get_str(args[1]);
+  mp_obj_print(mp_obj_new_str(testing, strlen(testing) + 1), PRINT_STR);
+
+  wifi_vendor_ie_type_t frameType;
+
+  const char* type = mp_obj_str_get_str(args[2]);
+  {
+    if(strcmp(type, "WIFI_VND_IE_TYPE_BEACON")){
+      frameType = WIFI_VND_IE_TYPE_BEACON;
+    }else if(strcmp(type, "WIFI_VND_IE_TYPE_PROBE_REQ")){
+      frameType = WIFI_VND_IE_TYPE_PROBE_REQ;
+    }else if(strcmp(type,"WIFI_VND_IE_TYPE_PROBE_RESP")){
+      frameType = WIFI_VND_IE_TYPE_PROBE_RESP;
+    }else if(strcmp(type, "WIFI_VND_IE_TYPE_ASSOC_REQ")){
+      frameType = WIFI_VND_IE_TYPE_ASSOC_REQ;
+    }else if(strcmp(type, "WIFI_VND_IE_TYPE_ASSOC_RESP")){
+      frameType = WIFI_VND_IE_TYPE_ASSOC_RESP;
+    }else{
+      mp_raise_ValueError("Frame type not recognized");
+    }
+  }
+
+  wifi_vendor_ie_id_t idx;
+  if(mp_obj_is_integer(args[3])){
+    switch(mp_obj_get_int(args[3])){
+      case 0:
+        idx = WIFI_VND_IE_ID_0;
+        break;
+      case 1:
+        idx = WIFI_VND_IE_ID_1;
+        break;
+      default:
+        mp_raise_ValueError("Invalid IE Index");
+    }
+  }
+  else{
+    mp_raise_ValueError("Vendor IE Index must be integer");
+  }
+
+  vendor_ie_data_t tmpData;
+  tmpData.element_id = 0xDD;
+  // uint8_t tempOui[3] = {0x00, 0xA0, 0x40};
+  // tmpData.vendor_oui = tempOui;
+  // tmpData.vendor_oui = {0x00, 0xA0, 0x40};
+  tmpData.vendor_oui[0] = 0x00;
+  tmpData.vendor_oui[1] = 0xA0;
+  tmpData.vendor_oui[2] = 0X40;
+  tmpData.vendor_oui_type = 0x00;
+  // tmpData.payload[10] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A};
+  uint8_t tmp_payload[10] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A};
+  for(int i = 0; i < 10; i++){
+    tmpData.payload[i] = tmp_payload[i];
+  }
+  tmpData.length = 10;
+
+
+  size_t tupleLength;
+  mp_obj_t * contents[4];
+  mp_obj_tuple_get(args[4], &tupleLength, NULL);
+  // vendor_ie_data_t payload;
+  // if(tupleLength == 4){
+  //   mp_obj_tuple_get(args[4], &tupleLength, contents);
+  //   payload.element_id = (uint8_t)mp_obj_get_int(contents[0]);
+  //   payload.length = (uint8_t)mp_obj_get_int(contents[1]);
+  //   payload.vendor_oui = strlen(mp_obj_str_get_str(contents[2])) == 2 ? (*uint8_t)
+  // }
+
+  esp_wifi_set_vendor_ie(mp_obj_is_true(args[1]), frameType, idx, &tmpData);
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(set_vendor_ie_obj, 5,5, set_vendor_ie);
 
 STATIC mp_obj_t wifi_sendPacket(mp_obj_t self_in, const mp_obj_t payload){
   mp_uint_t len;
@@ -666,6 +746,37 @@ STATIC mp_obj_t wifi_sendPacket(mp_obj_t self_in, const mp_obj_t payload){
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(wifi_sendPacket_obj, wifi_sendPacket);
 
+// void promiscuous_cb_wrapper(void* buf, wifi_promiscuous_pkt_t type){
+// static void promiscuous_cb_wrapper(void *buf, wifi_promiscuous_pkt_t *type);
+mp_obj_t promiscuous_cb_func;
+void promiscuous_cb_wrapper(void *buf, wifi_promiscuous_pkt_type_t type){
+  // char contents[150] = "";
+  // mp_call_function_2(promiscuous_cb_func, );
+  // contents = *(char*) buf;
+  // char *temp = buf;
+  // printf("%s\n", temp);
+  char * foo = (char*)buf;
+  for(int i = 0; i < 16; i++){
+    printf("%x\n", foo[i]);
+  }
+  // mp_call_function_2(promiscuous_cb_func, MP_OBJ_FROM_PTR(buf), MP_OBJ_FROM_PTR(&type));
+  return;
+}
+
+STATIC mp_obj_t setPromiscuous(mp_obj_t self_in, mp_obj_t state, mp_obj_t callback){
+  esp_wifi_set_promiscuous(mp_obj_is_true(state));
+  if(mp_obj_is_true(state)){
+    promiscuous_cb_func = callback;
+    wifi_promiscuous_filter_t t;
+    t.filter_mask = WIFI_PROMIS_FILTER_MASK_ALL;
+    esp_wifi_set_promiscuous_filter(&t);
+    esp_wifi_set_promiscuous_rx_cb(&promiscuous_cb_wrapper);
+  }
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(setPromiscuous_obj, setPromiscuous);
+
+
 
 STATIC const mp_rom_map_elem_t wlan_if_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_active), MP_ROM_PTR(&esp_active_obj) },
@@ -677,6 +788,8 @@ STATIC const mp_rom_map_elem_t wlan_if_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_config), MP_ROM_PTR(&esp_config_obj) },
     { MP_ROM_QSTR(MP_QSTR_ifconfig), MP_ROM_PTR(&esp_ifconfig_obj) },
     { MP_ROM_QSTR(MP_QSTR_wifi_sendPacket), MP_ROM_PTR(&wifi_sendPacket_obj)},
+    { MP_ROM_QSTR(MP_QSTR_setPromiscuous), MP_ROM_PTR(&setPromiscuous_obj)},
+    { MP_ROM_QSTR(MP_QSTR_set_vendor_ie), MP_ROM_PTR(&set_vendor_ie_obj)},
 };
 
 STATIC MP_DEFINE_CONST_DICT(wlan_if_locals_dict, wlan_if_locals_dict_table);
