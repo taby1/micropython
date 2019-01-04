@@ -51,6 +51,9 @@
 
 #include "modnetwork.h"
 
+// #include "../esp-idf/components/esp32/include/esp_err.h"
+// #include "esp_err.h"
+
 #define MODNETWORK_INCLUDE_CONSTANTS (1)
 
 NORETURN void _esp_exceptions(esp_err_t e) {
@@ -653,13 +656,94 @@ idx is index of elements of ID type
 data is vendor specific element data in tuple as (element_id, length, vendor_oui, vendor_oui_type, payload)
 */
 // STATIC mp_obj_t set_vendor_ie(mp_obj_t self_in, mp_obj_t enable, mp_obj_t type, mp_obj_t idx, mp_obj_t data){
+
+//   STATIC mp_obj_t set_vendor_ie(size_t n_args, const mp_obj_t *args){
+//   wlan_if_obj_t *self = MP_OBJ_TO_PTR(args[0]);
+//   const char* testing = mp_obj_str_get_str(args[1]);
+//   mp_obj_print(mp_obj_new_str(testing, strlen(testing) + 1), PRINT_STR);
+//
+//   wifi_vendor_ie_type_t frameType;
+//
+//   const char* type = mp_obj_str_get_str(args[2]);
+//   {
+//     if(strcmp(type, "WIFI_VND_IE_TYPE_BEACON")){
+//       frameType = WIFI_VND_IE_TYPE_BEACON;
+//     }else if(strcmp(type, "WIFI_VND_IE_TYPE_PROBE_REQ")){
+//       frameType = WIFI_VND_IE_TYPE_PROBE_REQ;
+//     }else if(strcmp(type,"WIFI_VND_IE_TYPE_PROBE_RESP")){
+//       frameType = WIFI_VND_IE_TYPE_PROBE_RESP;
+//     }else if(strcmp(type, "WIFI_VND_IE_TYPE_ASSOC_REQ")){
+//       frameType = WIFI_VND_IE_TYPE_ASSOC_REQ;
+//     }else if(strcmp(type, "WIFI_VND_IE_TYPE_ASSOC_RESP")){
+//       frameType = WIFI_VND_IE_TYPE_ASSOC_RESP;
+//     }else{
+//       mp_raise_ValueError("Frame type not recognized");
+//     }
+//   }
+//
+//   wifi_vendor_ie_id_t idx;
+//   if(mp_obj_is_integer(args[3])){
+//     switch(mp_obj_get_int(args[3])){
+//       case 0:
+//         idx = WIFI_VND_IE_ID_0;
+//         break;
+//       case 1:
+//         idx = WIFI_VND_IE_ID_1;
+//         break;
+//       default:
+//         mp_raise_ValueError("Invalid IE Index");
+//     }
+//   }
+//   else{
+//     mp_raise_ValueError("Vendor IE Index must be integer");
+//   }
+//
+//   vendor_ie_data_t tmpData;
+//   tmpData.element_id = 0xDD;
+//   // uint8_t tempOui[3] = {0x00, 0xA0, 0x40};
+//   // tmpData.vendor_oui = tempOui;
+//   // tmpData.vendor_oui = {0x00, 0xA0, 0x40};
+//   tmpData.vendor_oui[0] = 0x00;
+//   tmpData.vendor_oui[1] = 0xA0;
+//   tmpData.vendor_oui[2] = 0X40;
+//   tmpData.vendor_oui_type = 0x00;
+//   // tmpData.payload[10] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A};
+//   uint8_t tmp_payload[10] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A};
+//   for(int i = 0; i < 10; i++){
+//     tmpData.payload[i] = tmp_payload[i];
+//   }
+//   tmpData.length = 10;
+//
+//
+//   size_t tupleLength;
+//   mp_obj_t * contents[4];
+//   mp_obj_tuple_get(args[4], &tupleLength, NULL);
+//   // vendor_ie_data_t payload;
+//   // if(tupleLength == 4){
+//   //   mp_obj_tuple_get(args[4], &tupleLength, contents);
+//   //   payload.element_id = (uint8_t)mp_obj_get_int(contents[0]);
+//   //   payload.length = (uint8_t)mp_obj_get_int(contents[1]);
+//   //   payload.vendor_oui = strlen(mp_obj_str_get_str(contents[2])) == 2 ? (*uint8_t)
+//   // }
+//
+//   esp_err_t result = esp_wifi_set_vendor_ie(mp_obj_is_true(args[1]), frameType, idx, &tmpData);
+//   return mp_const_none;
+// }
+
 STATIC mp_obj_t set_vendor_ie(size_t n_args, const mp_obj_t *args){
   wlan_if_obj_t *self = MP_OBJ_TO_PTR(args[0]);
-  const char* testing = mp_obj_str_get_str(args[1]);
-  mp_obj_print(mp_obj_new_str(testing, strlen(testing) + 1), PRINT_STR);
 
-  wifi_vendor_ie_type_t frameType;
 
+  // if(mp_obj_is_true(args[1])){
+  //   printf("It was true!\n");
+  // }else{
+  //   printf("It was false!\n");
+  // }
+  // const char* testing = mp_obj_str_get_str(args[1]);
+  // mp_obj_print(mp_obj_new_str(testing, strlen(testing) + 1), PRINT_STR);
+
+
+  wifi_vendor_ie_type_t frameType = WIFI_VND_IE_TYPE_PROBE_RESP;
   const char* type = mp_obj_str_get_str(args[2]);
   {
     if(strcmp(type, "WIFI_VND_IE_TYPE_BEACON")){
@@ -676,8 +760,9 @@ STATIC mp_obj_t set_vendor_ie(size_t n_args, const mp_obj_t *args){
       mp_raise_ValueError("Frame type not recognized");
     }
   }
-
-  wifi_vendor_ie_id_t idx;
+  //
+  wifi_vendor_ie_id_t idx = WIFI_VND_IE_ID_0;
+  // wifi_vendor_ie_id_t idx;
   if(mp_obj_is_integer(args[3])){
     switch(mp_obj_get_int(args[3])){
       case 0:
@@ -693,7 +778,7 @@ STATIC mp_obj_t set_vendor_ie(size_t n_args, const mp_obj_t *args){
   else{
     mp_raise_ValueError("Vendor IE Index must be integer");
   }
-
+  //
   vendor_ie_data_t tmpData;
   tmpData.element_id = 0xDD;
   // uint8_t tempOui[3] = {0x00, 0xA0, 0x40};
@@ -709,21 +794,25 @@ STATIC mp_obj_t set_vendor_ie(size_t n_args, const mp_obj_t *args){
     tmpData.payload[i] = tmp_payload[i];
   }
   tmpData.length = 10;
+  //
+  //
+  // size_t tupleLength;
+  // mp_obj_t * contents[4];
+  // mp_obj_tuple_get(args[4], &tupleLength, NULL);
+  // // vendor_ie_data_t payload;
+  // // if(tupleLength == 4){
+  // //   mp_obj_tuple_get(args[4], &tupleLength, contents);
+  // //   payload.element_id = (uint8_t)mp_obj_get_int(contents[0]);
+  // //   payload.length = (uint8_t)mp_obj_get_int(contents[1]);
+  // //   payload.vendor_oui = strlen(mp_obj_str_get_str(contents[2])) == 2 ? (*uint8_t)
+  // // }
 
+  // esp_err_t result = esp_wifi_set_vendor_ie(mp_obj_is_true(args[1]), frameType, idx, &tmpData);
+  esp_err_t result = esp_wifi_set_vendor_ie(mp_obj_is_true(args[1]),frameType,idx, &tmpData);
+  !result ? printf("Error setting vendor ie: %d\n", result) : ;    //Print the error code to console if it wasn't successfull
 
-  size_t tupleLength;
-  mp_obj_t * contents[4];
-  mp_obj_tuple_get(args[4], &tupleLength, NULL);
-  // vendor_ie_data_t payload;
-  // if(tupleLength == 4){
-  //   mp_obj_tuple_get(args[4], &tupleLength, contents);
-  //   payload.element_id = (uint8_t)mp_obj_get_int(contents[0]);
-  //   payload.length = (uint8_t)mp_obj_get_int(contents[1]);
-  //   payload.vendor_oui = strlen(mp_obj_str_get_str(contents[2])) == 2 ? (*uint8_t)
-  // }
-
-  esp_wifi_set_vendor_ie(mp_obj_is_true(args[1]), frameType, idx, &tmpData);
-  return mp_const_none;
+  // return mp_const_none;
+  return(mp_obj_new_bool(!result)); //Returns True if succeeded, False otherwise
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(set_vendor_ie_obj, 5,5, set_vendor_ie);
 

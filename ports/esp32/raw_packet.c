@@ -3,6 +3,8 @@
 #include "py/runtime.h"
 #include "py/binary.h"
 #include "stdio.h"
+#include "stdlib.h"
+#include "inttypes.h"
 
 
 
@@ -28,7 +30,7 @@ uint8_t beacon_raw[] = {
 	0x01, 0x08, 0x82, 0x84,	0x8b, 0x96, 0x0c, 0x12, 0x18, 0x24,	// 39-48: Supported rates
 	0x03, 0x01, 0x01,						// 49-51: DS Parameter set, current channel 1 (= 0x01),
 	0x05, 0x04, 0x01, 0x02, 0x00, 0x00,				// 52-57: Traffic Indication Map
-	
+
 };
 
 #define BEACON_SSID_OFFSET 38
@@ -91,7 +93,7 @@ STATIC mp_obj_t packetTest(void){
 			seqnum[line] = 0;
 
 		esp_wifi_80211_tx(WIFI_IF_AP, beacon_rick, sizeof(beacon_raw) + strlen(rick_ssids[line]), false);
-    
+
     for(int i = 0; i < sizeof(beacon_raw) + strlen(rick_ssids[line]); i++){
       printf("%d: %d\n", i, beacon_rick[i]);
     }
@@ -116,6 +118,27 @@ STATIC mp_obj_t sendPacket(const mp_obj_t payload){
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(sendPacket_obj, sendPacket);
 
+uint32_t IP_str_to_bin(char *ip){
+  // printf("Processing: %s\n", ip);
+  uint8_t ipRep[4] = {0};
+  char *token;
+  const char delim[2] = ".";
+  // char result[33] = "";
+  token = strtok(ip, delim);
+  for(int i = 0; i < 4 && token != NULL; i++){
+    ipRep[i] = (uint8_t)atoi(token);
+    // printf("%s\n", token);
+    token = strtok(NULL,delim);
+  }
+
+  return ipRep[0] << 24 | ipRep[1] << 16 | ipRep[2] << 8 | ipRep[3];
+}
+
+STATIC mp_obj_t callbackTest(const mp_obj_t func, const mp_obj_t arg1, const mp_obj_t arg2){
+	return mp_call_function_2(func, arg1, arg2);
+	// return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(callbackTest_obj, callbackTest);
 
 // STATIC const mp_rom_map_elem_t raw_packet_rawSupported_locals_dict_table[] = {};
 // STATIC MP_DEFINE_CONST_DICT(raw_packet_rawSupported, raw_packet_rawSupported_locals_dict_table);
@@ -127,11 +150,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(sendPacket_obj, sendPacket);
 
 
 STATIC const mp_map_elem_t rawpacket_globals_table[] = {
-    { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_rawpacket) },
+    {MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_rawpacket)},
     {MP_OBJ_NEW_QSTR(MP_QSTR_hey), (mp_obj_t)&raw_hello_obj},
     {MP_OBJ_NEW_QSTR(MP_QSTR_say_something), (mp_obj_t)&saySomething_obj},
     {MP_OBJ_NEW_QSTR(MP_QSTR_packetTest), (mp_obj_t)&packetTest_obj},
     {MP_OBJ_NEW_QSTR(MP_QSTR_sendPacket), (mp_obj_t)&sendPacket_obj},
+    {MP_OBJ_NEW_QSTR(MP_QSTR_callbackTest), (mp_obj_t)&callbackTest_obj},
 };
 
 STATIC MP_DEFINE_CONST_DICT (
