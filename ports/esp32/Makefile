@@ -178,6 +178,7 @@ SRC_C = \
 	raw_packet.c \
 	promiscuous.c \
 	srp.c \
+	mpsrp.c \
 	$(SRC_MOD)
 
 EXTMOD_SRC_C = $(addprefix extmod/,\

@@ -180,6 +180,7 @@ extern const struct _mp_obj_module_t mp_module_network;
 extern const struct _mp_obj_module_t mp_module_onewire;
 extern const struct _mp_obj_module_t mp_module_rawpacket;
 extern const struct _mp_obj_module_t mp_module_promiscuous;
+extern const struct _mp_obj_module_t mp_module_mpsrp;
 
 #define MICROPY_PORT_BUILTIN_MODULES \
     { MP_OBJ_NEW_QSTR(MP_QSTR_esp), (mp_obj_t)&esp_module }, \
@@ -193,6 +194,7 @@ extern const struct _mp_obj_module_t mp_module_promiscuous;
     { MP_OBJ_NEW_QSTR(MP_QSTR_uhashlib), (mp_obj_t)&mp_module_uhashlib }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_rawpacket), (mp_obj_t)&mp_module_rawpacket}, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_promiscuous), (mp_obj_t)&mp_module_promiscuous}, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_mpsrp), (mp_obj_t)&mp_module_mpsrp}, \
 
 #define MICROPY_PORT_BUILTIN_MODULE_WEAK_LINKS \
     { MP_OBJ_NEW_QSTR(MP_QSTR_binascii), (mp_obj_t)&mp_module_ubinascii }, \
