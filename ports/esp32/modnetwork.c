@@ -760,7 +760,7 @@ STATIC mp_obj_t set_vendor_ie(size_t n_args, const mp_obj_t *args){
       mp_raise_ValueError("Frame type not recognized");
     }
   }
-  //
+
   wifi_vendor_ie_id_t idx = WIFI_VND_IE_ID_0;
   // wifi_vendor_ie_id_t idx;
   if(mp_obj_is_integer(args[3])){
@@ -778,22 +778,59 @@ STATIC mp_obj_t set_vendor_ie(size_t n_args, const mp_obj_t *args){
   else{
     mp_raise_ValueError("Vendor IE Index must be integer");
   }
+
+  // struct temp {
+  //   uint8_t element_id;      /**< Should be set to WIFI_VENDOR_IE_ELEMENT_ID (0xDD) */
+  //   uint8_t length;          /**< Length of all bytes in the element data following this field. Minimum 4. */
+  //   uint8_t vendor_oui[3];   /**< Vendor identifier (OUI). */
+  //   uint8_t vendor_oui_type; /**< Vendor-specific OUI type. */
+  //   uint8_t payload[14];      /**< Payload. Length is equal to value in 'length' field, minus 4. */
+  // };
   //
+  // struct temp x;
+  //
+  // vendor_ie_data_t tmpData = (vendor_ie_data_t) x;
   vendor_ie_data_t tmpData;
-  tmpData.element_id = 0xDD;
-  // uint8_t tempOui[3] = {0x00, 0xA0, 0x40};
-  // tmpData.vendor_oui = tempOui;
-  // tmpData.vendor_oui = {0x00, 0xA0, 0x40};
+  // vendor_ie_data_t * tmpTmpData;
+  // tmpTmpData = (vendor_ie_data_t *) calloc(30,1);
+  // tmpData = *tmpTmpData;
+  // tmpData = *((vendor_ie_data_t *) malloc(30));
+  // tmpData = *((vendor_ie_data_t *) realloc(&tmpData, 20));
+
+  // tmpData = *((vendor_ie_data_t *) realloc(&tmpData, 20));
+
+  // &(tmpData.payload) = (realloc(&(tmpData.payload), 15));
+
+  tmpData.element_id = WIFI_VENDOR_IE_ELEMENT_ID;
+  // tmpData.element_id = 0xDD;
+
   tmpData.vendor_oui[0] = 0x00;
   tmpData.vendor_oui[1] = 0xA0;
   tmpData.vendor_oui[2] = 0X40;
+  // uint8_t tmpData.vendor_oui[3] = {0x00, 0xA0, 0X40};
+
   tmpData.vendor_oui_type = 0x00;
-  // tmpData.payload[10] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A};
-  uint8_t tmp_payload[10] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A};
-  for(int i = 0; i < 10; i++){
+
+  // uint8_t tmp_payload[10] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+  uint8_t tmp_payload[11] = {1, 11, 116, 101, 115, 116, 121, 32, 98, 111, 105};
+  for(int i = 0; i < 11; i++){
     tmpData.payload[i] = tmp_payload[i];
   }
-  tmpData.length = 10;
+  // memcpy(tmpData.payload, tmp_payload, 10);
+
+  tmpData.length = 15;
+
+  printf("Element ID: %x\n", tmpData.element_id);
+  printf("Vendor OUI: \n");
+  for(int i = 0; i < 3; i++){
+    printf("%x\n", tmpData.vendor_oui[i]);
+  }
+  printf("Vendor OUI Type: %x\n", tmpData.vendor_oui_type);
+  printf("Payload: \n");
+  for (int i = 0; i < 10; i++) {
+    printf("%x\n", tmpData.payload[i]);
+  }
+
   //
   //
   // size_t tupleLength;
@@ -809,7 +846,8 @@ STATIC mp_obj_t set_vendor_ie(size_t n_args, const mp_obj_t *args){
 
   // esp_err_t result = esp_wifi_set_vendor_ie(mp_obj_is_true(args[1]), frameType, idx, &tmpData);
   esp_err_t result = esp_wifi_set_vendor_ie(mp_obj_is_true(args[1]),frameType,idx, &tmpData);
-  !result ? printf("Error setting vendor ie: %d\n", result) : ;    //Print the error code to console if it wasn't successfull
+  // !result ? printf("Error setting vendor ie: %d\n", result) :;    //Print the error code to console if it wasn't successfull
+  if(result){printf("Error setting vendor ie: %d\n", result);}
 
   // return mp_const_none;
   return(mp_obj_new_bool(!result)); //Returns True if succeeded, False otherwise
